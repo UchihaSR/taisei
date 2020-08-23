@@ -14,6 +14,7 @@
 #include "global.h"
 #include "stage.h"
 #include "stageutils.h"
+#include "util/glm.h"
 #include "portrait.h"
 
 PRAGMA(message "Remove when this stage is modernized")
@@ -60,7 +61,7 @@ static uint stage3_bg_pos(Stage3D *s3d, vec3 pos, float maxrange) {
 		0,
 	};
 	// minus sign for drawing order
-	vec3 r = {0, -1000, -500};
+	vec3 r = {0, -20, -10};
 
 	return linear3dpos(s3d, pos, maxrange, p, r);
 }
@@ -69,27 +70,101 @@ static void stage3_bg_ground_draw(vec3 pos) {
 
 	r_mat_mv_push();
 	r_mat_mv_translate(pos[0], pos[1], pos[2]);
-	r_mat_mv_scale(50,50,50);
 
-	r_shader_standard();
-	r_uniform_sampler("tex", "stage3/ground");
+	vec3 light_pos[] = {
+		{0, stage_3d_context.cam.pos[1]+3, stage_3d_context.cam.pos[2]-0.8},
+		{0, 25, 3}
+	};
+
+	mat4 camera_trans;
+	glm_mat4_identity(camera_trans);
+	camera3d_apply_transforms(&stage_3d_context.cam, camera_trans);
+
+	r_shader("pbr");
+	//r_uniform_vec3_array("light_positions[0]", 0, 1, &stage_3d_context.cx);
+
+	vec3 light_colors[] = {
+		{1, 22, 22},
+		{4, 20, 22},
+	};
+
+	vec3 cam_light_positions[2];
+	glm_mat4_mulv3(camera_trans, light_pos[0], 1, cam_light_positions[0]);
+	glm_mat4_mulv3(camera_trans, light_pos[1], 1, cam_light_positions[1]);
+
+		
+	r_uniform_vec3_array("light_positions[0]", 0, ARRAY_SIZE(cam_light_positions), cam_light_positions);
+	r_uniform_vec3_array("light_colors[0]", 0, ARRAY_SIZE(light_colors), light_colors);
+	r_uniform_int("light_count", 2);
+	
+	r_uniform_float("metallic", 0);
+	r_uniform_sampler("tex", "stage3/ground_diffuse");
+	r_uniform_sampler("roughness_map", "stage3/ground_roughness");
+	r_uniform_sampler("normal_map", "stage3/ground_normal");
+	r_uniform_sampler("ambient_map", "stage3/ground_ambient");
+	r_uniform_vec3("ambient_color", 1, 1, 1);
+
+
 	r_draw_model("stage3/ground");
-	r_uniform_sampler("tex", "stage3/rocks");
-	r_draw_model("stage3/rocks");
-	r_uniform_sampler("tex", "stage3/trees");
+	
+	r_uniform_sampler("tex", "stage3/trees_diffuse");
+	r_uniform_sampler("roughness_map", "stage3/trees_roughness");
+	r_uniform_sampler("normal_map", "stage3/trees_normal");
+	r_uniform_sampler("ambient_map", "stage3/trees_ambient");
+
 	r_draw_model("stage3/trees");
+	
+	r_uniform_sampler("tex", "stage3/rocks_diffuse");
+	r_uniform_sampler("roughness_map", "stage3/rocks_roughness");
+	r_uniform_sampler("normal_map", "stage3/rocks_normal");
+	r_uniform_sampler("ambient_map", "stage3/rocks_ambient");
+
+	r_draw_model("stage3/rocks");
 	r_mat_mv_pop();
-}
+	r_shader_standard();}
 
 static void stage3_bg_leaves_draw(vec3 pos) {
 	r_mat_mv_push();
 	r_mat_mv_translate(pos[0], pos[1], pos[2]);
-	r_mat_mv_scale(50,50,50);
-	r_mat_mv_translate(0,0,-0.01);
-	r_uniform_sampler("tex", "stage3/leaves");
-	r_draw_model("stage3/leaves");
+	r_mat_mv_translate(0,0,-0.0002);
+	vec3 light_pos[] = {
+		{0, stage_3d_context.cam.pos[1]+3, stage_3d_context.cam.pos[2]-0.8},
+		{0, 25, 3}
+	};
 
+	mat4 camera_trans;
+	glm_mat4_identity(camera_trans);
+	camera3d_apply_transforms(&stage_3d_context.cam, camera_trans);
+
+	r_shader("pbr");
+	r_uniform_vec3_array("light_positions[0]", 0, 1, &stage_3d_context.cx);
+
+	vec3 light_colors[] = {
+		{1, 22, 22},
+		{4, 20, 22},
+	};
+
+	vec3 cam_light_positions[2];
+	glm_mat4_mulv3(camera_trans, light_pos[0], 1, cam_light_positions[0]);
+	glm_mat4_mulv3(camera_trans, light_pos[1], 1, cam_light_positions[1]);
+
+		
+	r_uniform_vec3_array("light_positions[0]", 0, ARRAY_SIZE(cam_light_positions), cam_light_positions);
+	r_uniform_vec3_array("light_colors[0]", 0, ARRAY_SIZE(light_colors), light_colors);
+	r_uniform_int("light_count", 2);
+	
+	r_uniform_float("metallic", 0);
+	r_uniform_sampler("tex", "stage3/ground_diffuse");
+	r_uniform_sampler("roughness_map", "stage3/leaves_roughness");
+	r_uniform_sampler("normal_map", "stage3/leaves_normal");
+	r_uniform_sampler("ambient_map", "stage3/leaves_ambient");
+	r_uniform_vec3("ambient_color", 1, 1, 1);
+
+
+	r_draw_model("stage3/leaves");
+	
 	r_mat_mv_pop();
+	r_shader_standard();
 }
 
 static bool stage3_fog(Framebuffer *fb) {
@@ -130,10 +205,10 @@ static bool stage3_glitch(Framebuffer *fb) {
 static void stage3_start(void) {
 	stage3d_init(&stage_3d_context, 16);
 
-	stage_3d_context.cx[1] = 800;
-	stage_3d_context.crot[0] = -95;
-	stage_3d_context.cv[1] = -5;
-	stage_3d_context.cv[2] = -2.5;
+	stage_3d_context.cx[1] = -16;
+	stage_3d_context.crot[0] = 80;
+	stage_3d_context.cv[1] = 0.1;
+	stage_3d_context.cv[2] = 0.05;
 
 }
 
@@ -144,10 +219,22 @@ static void stage3_preload(void) {
 	portrait_preload_face_sprite("scuttle", "normal", RESF_DEFAULT);
 	preload_resources(RES_BGM, RESF_OPTIONAL, "stage3", "stage3boss", NULL);
 	preload_resources(RES_SPRITE, RESF_DEFAULT,
-		"stage3/ground",
-		"stage3/rocks",
-		"stage3/trees",
-		"stage3/leaves",
+		"stage3/ground_ambient",
+		"stage3/ground_normal",
+		"stage3/ground_roughness",
+		"stage3/ground_diffuse",
+		"stage3/trees_ambient",
+		"stage3/trees_normal",
+		"stage3/trees_roughness",
+		"stage3/trees_diffuse",
+		"stage3/rocks_ambient",
+		"stage3/rocks_normal",
+		"stage3/rocks_roughness",
+		"stage3/rocks_diffuse",
+		"stage3/leaves_ambient",
+		"stage3/leaves_normal",
+		"stage3/leaves_roughness",
+		"stage3/leaves_diffuse",
 		"stage3/spellbg1",
 		"stage3/spellbg2",
 		"stage3/wspellbg",
@@ -183,8 +270,8 @@ static void stage3_end(void) {
 }
 
 static void stage3_draw(void) {
-	r_mat_proj_perspective(STAGE3D_DEFAULT_FOVY, STAGE3D_DEFAULT_ASPECT, 30, 3000);
-	stage3d_draw(&stage_3d_context, 6000, 2, (Stage3DSegment[]) { stage3_bg_ground_draw, stage3_bg_pos, stage3_bg_leaves_draw, stage3_bg_pos });
+	r_mat_proj_perspective(STAGE3D_DEFAULT_FOVY, VIEWPORT_W/(real)VIEWPORT_H, 1, 60);
+	stage3d_draw(&stage_3d_context, 120, 2, (Stage3DSegment[]) { stage3_bg_ground_draw, stage3_bg_pos, stage3_bg_leaves_draw, stage3_bg_pos });
 }
 
 static void stage3_update(void) {
