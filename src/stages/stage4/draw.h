@@ -9,17 +9,24 @@
 #ifndef IGUARD_stages_stage4_draw_h
 #define IGUARD_stages_stage4_draw_h
 
-#include "taisei.h
+#include "taisei.h"
 
+#include "stagedraw.h"
 #include "color.h"
 
-extern struct Stage4DrawData {
+typedef struct Stage4DrawData {
 	Color ambient_color;
 	vec3 midboss_light_pos;
-} stage4_draw_data;
+} Stage4DrawData;
 
 void stage4_drawsys_init(void);
+void stage4_drawsys_shutdown(void);
+
+Stage4DrawData *stage4_get_draw_data(void)
+	attr_returns_nonnull attr_returns_max_aligned;
 
 void stage4_draw(void);
 
-#endif
+extern ShaderRule stage4_bg_effects[];
+
+#endif // IGUARD_stages_stage4_draw_h

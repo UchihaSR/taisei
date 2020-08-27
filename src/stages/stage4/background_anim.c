@@ -13,7 +13,7 @@
 
 #include "stageutils.h"
 
-TASK(upgrade_stage_3d, NO_ARGS) {
+TASK(update_stage_3d, NO_ARGS) {
 	for(;;) {
 		YIELD;
 		stage3d_update(&stage_3d_context);
@@ -23,8 +23,8 @@ TASK(upgrade_stage_3d, NO_ARGS) {
 TASK(animate_bg_fullstage, NO_ARGS) {
 	stage_3d_context.cam.pos[2] = -1.8;
 	stage_3d_context.cam.pos[1] = -30;
-	stage_3d_context.crot[0] = 80;
-	
+	stage_3d_context.cam.rot.v[0] = 80;
+
 	stage_3d_context.cam.vel[1] = 0.017;
 	stage_3d_context.cam.vel[2] = 0.008;
 
@@ -52,9 +52,27 @@ TASK(animate_bg_fullstage, NO_ARGS) {
 }
 
 void stage4_bg_init_fullstage() {
-	memset(&stage4_draw_data, 0, sizeof(stage4_draw_data));
-	stage4_draw_data.ambient_color = *RGB(0.1,0.1,0.1);
-	
-	INVOKE_TASK(upgrade_stage_3d);
+	Stage4DrawData *draw_data = stage4_get_draw_data();
+	draw_data->ambient_color = *RGB(0.1, 0.1, 0.1);
+
+	INVOKE_TASK(update_stage_3d);
 	INVOKE_TASK(animate_bg_fullstage);
+}
+
+void stage4_bg_init_spellpractice(void) {
+	stage4_bg_init_fullstage();  // TODO
+}
+
+TASK(redden_corridor, NO_ARGS) {
+	Stage4DrawData *draw_data = stage4_get_draw_data();
+	int t = 100;
+
+	for(int i = 0; i < t; i++) {
+		color_approach(&draw_data->ambient_color, RGB(1, 0, 0), 1.0f / t);
+		YIELD;
+	}
+}
+
+void stage4_bg_redden_corridor(void) {
+	INVOKE_TASK(redden_corridor);
 }

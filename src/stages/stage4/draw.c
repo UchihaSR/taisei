@@ -13,7 +13,11 @@
 #include "global.h"
 #include "util/glm.h"
 
-struct Stage4DrawData stage4_draw_data;
+static Stage4DrawData *stage4_draw_data;
+
+Stage4DrawData *stage4_get_draw_data(void) {
+	return NOT_NULL(stage4_draw_data);
+}
 
 static bool stage4_fog(Framebuffer *fb) {
 	float f = 0;
@@ -30,7 +34,6 @@ static bool stage4_fog(Framebuffer *fb) {
 
 	return true;
 }
-
 
 static uint stage4_lake_pos(Stage3D *s3d, vec3 pos, float maxrange) {
 	vec3 p = {0, 0, 0};
@@ -60,11 +63,11 @@ static void stage4_lake_draw(vec3 pos) {
 	glm_mat4_mulv3(camera_trans, light_pos[0], 1, cam_light_positions[0]);
 	glm_mat4_mulv3(camera_trans, light_pos[1], 1, cam_light_positions[1]);
 
-		
+
 	r_uniform_vec3_array("light_positions[0]", 0, ARRAY_SIZE(cam_light_positions), cam_light_positions);
 	r_uniform_vec3_array("light_colors[0]", 0, ARRAY_SIZE(light_colors), light_colors);
 	r_uniform_int("light_count", 2);
-	
+
 	r_uniform_float("metallic", 0);
 	r_uniform_sampler("tex", "stage4/ground_diffuse");
 	r_uniform_sampler("roughness_map", "stage4/ground_roughness");
@@ -74,7 +77,7 @@ static void stage4_lake_draw(vec3 pos) {
 
 
 	r_draw_model("stage4/ground");
-	
+
 	r_uniform_float("metallic", 0);
 	r_uniform_sampler("tex", "stage4/mansion_diffuse");
 	r_uniform_sampler("roughness_map", "stage4/mansion_roughness");
@@ -155,7 +158,7 @@ static void stage4_corridor_draw(vec3 pos) {
 	r_uniform_sampler("roughness_map", "stage4/corridor_roughness");
 	r_uniform_sampler("normal_map", "stage4/corridor_normal");
 	r_uniform_sampler("ambient_map", "stage4/corridor_ambient");
-	r_uniform_vec3_rgb("ambient_color", &stage4_draw_data.ambient_color);
+	r_uniform_vec3_rgb("ambient_color", &stage4_draw_data->ambient_color);
 
 	r_draw_model("stage4/corridor");
 	r_mat_mv_pop();
@@ -173,5 +176,17 @@ void stage4_draw(void) {
 }
 
 void stage4_drawsys_init(void) {
+	stage4_draw_data = calloc(1, sizeof(*stage4_draw_data));
 	stage3d_init(&stage_3d_context, 16);
 }
+
+void stage4_drawsys_shutdown(void) {
+	stage3d_shutdown(&stage_3d_context);
+	free(stage4_draw_data);
+	stage4_draw_data = NULL;
+}
+
+ShaderRule stage4_bg_effects[] = {
+	stage4_fog,
+	NULL,
+};

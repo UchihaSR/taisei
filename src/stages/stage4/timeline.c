@@ -8,14 +8,17 @@
 
 #include "taisei.h"
 
-#include "stage4_events.h"
-#include "stage6/elly.h"
 #include "stage4.h"
+#include "timeline.h"
+#include "draw.h"
+#include "background_anim.h"
+
 #include "global.h"
 #include "stage.h"
 #include "enemy.h"
 #include "laser.h"
 #include "common_tasks.h"
+#include "../stage6/elly.h"
 
 PRAGMA(message "Remove when this stage is modernized")
 DIAGNOSTIC(ignored "-Wdeprecated-declarations")
@@ -1598,19 +1601,11 @@ static int scythe_post_mid(Enemy *e, int t) {
 	return 1;
 }
 
-TASK(change_corridor, NO_ARGS) {
-	for(int i = 0; i < 100; i++) {
-		color_approach(&stage4_draw_data.ambient_color, RGB(1,0,0), 0.01);
-		YIELD;
-	}
-}
-
 void stage4_events(void) {
 	TIMER(&global.timer);
 
 	AT(0) {
 		stage_start_bgm("stage4");
-		stage4_skip(env_get("STAGE4_TEST", 0));
 		stage_set_voltage_thresholds(170, 340, 660, 1040);
 	}
 
@@ -1706,7 +1701,7 @@ void stage4_events(void) {
 
 	AT(5300 + midboss_time) {
 		stage_unlock_bgm("stage4");
-		INVOKE_TASK(change_corridor);
+		stage4_bg_redden_corridor();
 		global.boss = create_kurumi();
 	}
 

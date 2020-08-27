@@ -11,8 +11,17 @@
 #include "stage4.h"
 #include "draw.h"
 #include "background_anim.h"
+#include "timeline.h"
+#include "portrait.h"
+#include "stageutils.h"
 
 #include "global.h"
+
+/*
+ *  See the definition of AttackInfo in boss.h for information on how to set up the idmaps.
+ *  To add, remove, or reorder spells, see this stage's header file.
+ */
+
 struct stage4_spells_s stage4_spells = {
 	.mid = {
 		.gate_of_walachia = {
@@ -58,6 +67,17 @@ static void stage4_start(void) {
 	stage4_drawsys_init();
 	stage4_bg_init_fullstage();
 	stage_start_bgm("stage4");
+}
+
+static void stage4_spellpractice_start(void) {
+	stage4_drawsys_init();
+	stage4_bg_init_spellpractice();
+
+	global.boss = stage4_spawn_kurumi(BOSS_DEFAULT_SPAWN_POS);
+	boss_add_attack_from_info(global.boss, global.stage->spell, true);
+	boss_start_attack(global.boss, global.boss->attacks);
+
+	stage_start_bgm("stage4boss");
 }
 
 static void stage4_preload(void) {
@@ -114,5 +134,23 @@ static void stage4_preload(void) {
 }
 
 static void stage4_end(void) {
-	stage3d_shutdown(&stage_3d_context);
+	stage4_drawsys_shutdown();
 }
+
+StageProcs stage4_procs = {
+	.begin = stage4_start,
+	.preload = stage4_preload,
+	.end = stage4_end,
+	.draw = stage4_draw,
+	.event = stage4_events,
+	.shader_rules = stage4_bg_effects,
+	.spellpractice_procs = &stage4_spell_procs,
+};
+
+StageProcs stage4_spell_procs = {
+	.begin = stage4_spellpractice_start,
+	.preload = stage4_preload,
+	.end = stage4_end,
+	.draw = stage4_draw,
+	.shader_rules = stage4_bg_effects,
+};
