@@ -57,7 +57,7 @@ vec3 fresnel_schlick(float cosTheta, vec3 F0) {
 void main(void) {
 	vec3 albedo = (r_color * texture(tex, texCoord)).rgb;
 	float roughness = texture(roughness_map, texCoord).r;
-	vec3 tbn_normal = normalize(texture(normal_map, texCoord).rgb*2-1);
+	vec3 tbn_normal = sample_normalmap(normal_map, texCoord);
 	vec3 ambient = texture(ambient_map, texCoord).rgb;
 
 	vec3 n = normalize(mat3(normalize(tangent), normalize(bitangent), normalize(normal))*tbn_normal);
