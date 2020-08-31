@@ -13,16 +13,7 @@
 
 #include "boss.h"
 
-void kurumi_spell_bg(Boss*, int);
-void kurumi_slaveburst(Boss*, int);
-void kurumi_redspike(Boss*, int);
-void kurumi_aniwall(Boss*, int);
-void kurumi_blowwall(Boss*, int);
-void kurumi_danmaku(Boss*, int);
-void kurumi_extra(Boss*, int);
-
 void stage4_events(void);
-Boss* stage4_spawn_kurumi(cmplx pos);
 
 #define STAGE4_MIDBOSS_TIME 3724
 #define STAGE4_MIDBOSS_MUSIC_TIME 2818

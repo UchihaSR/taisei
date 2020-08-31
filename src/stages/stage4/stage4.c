@@ -12,9 +12,11 @@
 #include "draw.h"
 #include "background_anim.h"
 #include "timeline.h"
+#include "spells/spells.h"
+#include "kurumi.h"
+
 #include "portrait.h"
 #include "stageutils.h"
-
 #include "global.h"
 
 /*
