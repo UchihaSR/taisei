@@ -46,7 +46,9 @@ void stage3d_apply_transforms(Stage3D *s, mat4 mat) {
 void stage3d_draw_segment(Stage3D *s, SegmentPositionRule pos_rule, SegmentDrawRule draw_rule, float maxrange) {
 	uint num = pos_rule(s, s->cam.pos, maxrange);
 
+	log_warn("obj: %x", (unsigned long)draw_rule);
 	for(uint j = 0; j < num; ++j) {
+		log_warn("%f %f %f", s->pos_buffer[j][0], s->pos_buffer[j][1], s->pos_buffer[j][2]);
 		draw_rule(s->pos_buffer[j]);
 	}
 }
@@ -94,6 +96,9 @@ uint linear3dpos(Stage3D *s3d, vec3 camera, float maxrange, vec3 support, vec3 d
 	// draw nearest to closest
 	for(int r = 0; r <= nrange; r++) {
 		for(int dir = -1; dir <= 1; dir += 2) {
+			if(r == 0 && dir > 0) {
+				continue;
+			}
 			int n = n_closest_to_cam + dir*r;
 			vec3 extended_direction;
 			glm_vec3_scale(direction, n, extended_direction);
