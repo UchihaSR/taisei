@@ -66,43 +66,55 @@ static uint stage3_bg_pos(Stage3D *s3d, vec3 pos, float maxrange) {
 	return linear3dpos(s3d, pos, maxrange, p, r);
 }
 
-static void stage3_bg_ground_draw(vec3 pos) {
+static void stage3_bg_setup_pbr_lighting() {
+	cmplx boss_dist = 10000*I;
+	if(global.boss) {
+		boss_dist = global.boss->pos-(VIEWPORT_W+VIEWPORT_H/2*I)*0.5;
+	}
 
-	r_mat_mv_push();
-	r_mat_mv_translate(pos[0], pos[1], pos[2]);
-
+	log_debug("%f", 15+0.1*cimag(boss_dist));
+	log_debug("a %f", 15-0.1*cimag(boss_dist));
 	vec3 light_pos[] = {
-		{0, stage_3d_context.cam.pos[1]+3, stage_3d_context.cam.pos[2]-0.8},
-		{0, 25, 3}
+		{creal(boss_dist)*0.02, stage_3d_context.cam.pos[1]+11-0.1*cimag(boss_dist), stage_3d_context.cam.pos[2]+4-0.1*cimag(boss_dist)},
 	};
 
 	mat4 camera_trans;
 	glm_mat4_identity(camera_trans);
 	camera3d_apply_transforms(&stage_3d_context.cam, camera_trans);
 
-	r_shader("pbr");
-	//r_uniform_vec3_array("light_positions[0]", 0, 1, &stage_3d_context.cx);
-
 	vec3 light_colors[] = {
-		{1, 22, 22},
-		{4, 20, 22},
+		{10, 42, 30},
 	};
 
-	vec3 cam_light_positions[2];
+	vec3 cam_light_positions[1];
 	glm_mat4_mulv3(camera_trans, light_pos[0], 1, cam_light_positions[0]);
-	glm_mat4_mulv3(camera_trans, light_pos[1], 1, cam_light_positions[1]);
 
 		
 	r_uniform_vec3_array("light_positions[0]", 0, ARRAY_SIZE(cam_light_positions), cam_light_positions);
 	r_uniform_vec3_array("light_colors[0]", 0, ARRAY_SIZE(light_colors), light_colors);
-	r_uniform_int("light_count", 2);
+	r_uniform_int("light_count", 1);
+
+	real f = 1/(1+global.frames/1000.);
+	r_uniform_vec3("ambient_color",f,f,sqrt(f));
+}
+
+
+static void stage3_bg_ground_draw(vec3 pos) {
+
+	r_mat_mv_push();
+	r_mat_mv_translate(pos[0], pos[1], pos[2]);
+
+
+	r_shader("pbr");
+	//r_uniform_vec3_array("light_positions[0]", 0, 1, &stage_3d_context.cx);
+
+	stage3_bg_setup_pbr_lighting();
 	
 	r_uniform_float("metallic", 0);
 	r_uniform_sampler("tex", "stage3/ground_diffuse");
 	r_uniform_sampler("roughness_map", "stage3/ground_roughness");
 	r_uniform_sampler("normal_map", "stage3/ground_normal");
 	r_uniform_sampler("ambient_map", "stage3/ground_ambient");
-	r_uniform_vec3("ambient_color", 1, 1, 1);
 
 
 	r_draw_model("stage3/ground");
@@ -127,38 +139,17 @@ static void stage3_bg_leaves_draw(vec3 pos) {
 	r_mat_mv_push();
 	r_mat_mv_translate(pos[0], pos[1], pos[2]);
 	r_mat_mv_translate(0,0,-0.0002);
-	vec3 light_pos[] = {
-		{0, stage_3d_context.cam.pos[1]+3, stage_3d_context.cam.pos[2]-0.8},
-		{0, 25, 3}
-	};
 
-	mat4 camera_trans;
-	glm_mat4_identity(camera_trans);
-	camera3d_apply_transforms(&stage_3d_context.cam, camera_trans);
 
 	r_shader("pbr");
-	r_uniform_vec3_array("light_positions[0]", 0, 1, &stage_3d_context.cx);
 
-	vec3 light_colors[] = {
-		{1, 22, 22},
-		{4, 20, 22},
-	};
+	stage3_bg_setup_pbr_lighting();
 
-	vec3 cam_light_positions[2];
-	glm_mat4_mulv3(camera_trans, light_pos[0], 1, cam_light_positions[0]);
-	glm_mat4_mulv3(camera_trans, light_pos[1], 1, cam_light_positions[1]);
-
-		
-	r_uniform_vec3_array("light_positions[0]", 0, ARRAY_SIZE(cam_light_positions), cam_light_positions);
-	r_uniform_vec3_array("light_colors[0]", 0, ARRAY_SIZE(light_colors), light_colors);
-	r_uniform_int("light_count", 2);
-	
 	r_uniform_float("metallic", 0);
 	r_uniform_sampler("tex", "stage3/ground_diffuse");
 	r_uniform_sampler("roughness_map", "stage3/leaves_roughness");
 	r_uniform_sampler("normal_map", "stage3/leaves_normal");
 	r_uniform_sampler("ambient_map", "stage3/leaves_ambient");
-	r_uniform_vec3("ambient_color", 1, 1, 1);
 
 
 	r_draw_model("stage3/leaves");
@@ -170,9 +161,9 @@ static void stage3_bg_leaves_draw(vec3 pos) {
 static bool stage3_fog(Framebuffer *fb) {
 	r_shader("zbuf_fog");
 	r_uniform_sampler("depth", r_framebuffer_get_attachment(fb, FRAMEBUFFER_ATTACH_DEPTH));
-	r_uniform_vec4("fog_color", 0.5, 0.7, 1, 1.0);
+	r_uniform_vec4("fog_color", 0.8, 0.5, 1, 1.0);
 	r_uniform_float("start", 0.6);
-	r_uniform_float("end", 5);
+	r_uniform_float("end", 2);
 	r_uniform_float("exponent", 10);
 	r_uniform_float("sphereness", 0);
 	draw_framebuffer_tex(fb, VIEWPORT_W, VIEWPORT_H);
