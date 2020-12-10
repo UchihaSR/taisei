@@ -72,8 +72,6 @@ static void stage3_bg_setup_pbr_lighting() {
 		boss_dist = global.boss->pos-(VIEWPORT_W+VIEWPORT_H/2*I)*0.5;
 	}
 
-	log_debug("%f", 15+0.1*cimag(boss_dist));
-	log_debug("a %f", 15-0.1*cimag(boss_dist));
 	vec3 light_pos[] = {
 		{creal(boss_dist)*0.02, stage_3d_context.cam.pos[1]+11-0.1*cimag(boss_dist), stage_3d_context.cam.pos[2]+4-0.1*cimag(boss_dist)},
 	};
@@ -146,7 +144,7 @@ static void stage3_bg_leaves_draw(vec3 pos) {
 	stage3_bg_setup_pbr_lighting();
 
 	r_uniform_float("metallic", 0);
-	r_uniform_sampler("tex", "stage3/ground_diffuse");
+	r_uniform_sampler("tex", "stage3/leaves_diffuse");
 	r_uniform_sampler("roughness_map", "stage3/leaves_roughness");
 	r_uniform_sampler("normal_map", "stage3/leaves_normal");
 	r_uniform_sampler("ambient_map", "stage3/leaves_ambient");
